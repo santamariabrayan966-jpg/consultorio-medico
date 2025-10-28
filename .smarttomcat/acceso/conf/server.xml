@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =============================================================
+  CONFIGURACIÓN DE TOMCAT PARA XAMPP + SPRING BOOT (.war)
+  Autor: Brayan Santamaría
+  =============================================================
+  - Puerto HTTP: 8090 (para evitar conflicto con Apache o Spring Boot)
+  - Shutdown port: 8010
+  - Conector HTTP optimizado para WAR externo
+  =============================================================
+-->
+
+<Server port="8010" shutdown="SHUTDOWN">
+
+  <!-- ===================== -->
+  <!-- LISTENERS DEL SERVIDOR -->
+  <!-- ===================== -->
+  <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
+  <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
+  <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+  <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
+  <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+
+  <!-- ===================== -->
+  <!-- RECURSOS GLOBALES -->
+  <!-- ===================== -->
+  <GlobalNamingResources>
+    <Resource name="UserDatabase" auth="Container"
+              type="org.apache.catalina.UserDatabase"
+              description="User database that can be updated and saved"
+              factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
+              pathname="conf/tomcat-users.xml" />
+  </GlobalNamingResources>
+
+  <!-- ===================== -->
+  <!-- SERVICIO PRINCIPAL -->
+  <!-- ===================== -->
+  <Service name="Catalina">
+
+    <!-- ===================== -->
+    <!-- CONECTOR HTTP -->
+    <!-- ===================== -->
+    <Connector port="8090" protocol="HTTP/1.1"
+           connectionTimeout="20000"
+           redirectPort="8443"
+           URIEncoding="UTF-8"
+           maxThreads="200"
+           maxParameterCount="1000"
+           compression="on"
+           compressionMinSize="2048"
+           noCompressionUserAgents="gozilla, traviata"
+           compressableMimeType="text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json" />
+
+    <!-- ===================== -->
+    <!-- ENGINE (PROCESADOR DE PETICIONES) -->
+    <!-- ===================== -->
+    <Engine name="Catalina" defaultHost="localhost">
+
+      <!-- Autenticación básica -->
+      <Realm className="org.apache.catalina.realm.LockOutRealm">
+        <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+               resourceName="UserDatabase" />
+      </Realm>
+
+      <!-- ===================== -->
+      <!-- HOST PRINCIPAL -->
+      <!-- ===================== -->
+      <Host name="localhost" appBase="webapps"
+            unpackWARs="true" autoDeploy="true">
+
+        <!-- LOGS -->
+        <Valve className="org.apache.catalina.valves.AccessLogValve"
+               directory="logs"
+               prefix="localhost_access_log"
+               suffix=".txt"
+               pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+
+      </Host>
+    </Engine>
+  </Service>
+</Server>
+

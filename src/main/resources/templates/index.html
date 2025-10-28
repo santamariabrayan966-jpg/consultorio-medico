@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Consultorio Médico</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0; bottom: 0; left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            transition: transform .3s ease-in-out;
+            width: 250px;
+        }
+        @media (max-width: 767.98px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .sidebar-overlay.active { display: block; }
+        }
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 99;
+            display: none;
+            cursor: pointer;
+        }
+        .main-content { transition: margin-left .3s ease-in-out; }
+        @media (min-width: 768px) {
+            .main-content { margin-left: 250px; }
+        }
+        .card-icon { font-size: 3rem; opacity: 0.3; }
+        .card { border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); border: none; }
+    </style>
+</head>
+<body>
+
+<div class="d-flex">
+    <!-- Overlay -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <a th:href="@{/}" class="fs-4 text-white text-decoration-none fw-bold">Consultorio Médico</a>
+            <button id="close-sidebar" class="btn btn-dark d-md-none p-0">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li><a th:href="@{/}" class="nav-link text-white"><i class="bi bi-house-door"></i> Inicio</a></li>
+            <li><a th:href="@{/usuarios/listar}" class="nav-link text-white"><i class="bi bi-people"></i> Usuarios</a></li>
+            <li><a th:href="@{/especialidades/listar}" class="nav-link text-white"><i class="bi bi-heart-pulse"></i> Especialidades</a></li>
+            <li><a th:href="@{/perfiles/listar}" class="nav-link text-white"><i class="bi bi-person-badge"></i> Perfiles</a></li>
+            <li><a th:href="@{/medicos/listar}" class="nav-link text-white"><i class="bi bi-person-vcard"></i> Médicos</a></li>
+            <li><a th:href="@{/servicios/listar}" class="nav-link text-white"><i class="bi bi-clipboard2-pulse"></i> Servicios</a></li>
+            <li><a th:href="@{/citas/listar}" class="nav-link text-white"><i class="bi bi-calendar-check"></i> Citas</a></li>
+            <li><a th:href="@{/historial/listar}" class="nav-link text-white"><i class="bi bi-file-medical"></i> Historial Clínico</a></li>
+            <li><a th:href="@{/pagos/listar}" class="nav-link text-white"><i class="bi bi-cash"></i> Pagos</a></li>
+            <li><a th:href="@{/panel-consultorio}" class="nav-link text-white"><i class="bi bi-hospital"></i> Panel Consultorio</a></li>
+
+        </ul>
+        <hr>
+        <div class="mt-auto">
+            <a th:href="@{/logout}" class="btn btn-danger w-100"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div id="main-content" class="main-content w-100">
+        <!-- Top bar -->
+        <header class="p-3 mb-3 border-bottom bg-white shadow-sm">
+            <div class="d-flex align-items-center">
+                <button id="open-sidebar" class="btn btn-light d-md-none me-3 p-1">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h1 class="h3 mb-0 fw-bold">Dashboard Consultorio Médico</h1>
+            </div>
+        </header>
+
+        <main class="container-fluid p-4">
+            <!-- Banner de bienvenida -->
+            <div class="alert alert-info text-center shadow-sm">
+                <h4 class="fw-bold">Bienvenido al Consultorio Médico Acceso</h4>
+                <p class="mb-0">Gestione pacientes, médicos, citas y servicios de manera sencilla.</p>
+            </div>
+
+            <div class="row g-4 mt-1">
+                <!-- Pacientes -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card text-white bg-primary h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Pacientes</h5>
+                            <h2 class="fw-bold" th:text="${totalPacientes}">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <!-- Médicos -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card text-white bg-success h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Médicos</h5>
+                            <h2 class="fw-bold" th:text="${totalMedicos}">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <!-- Citas hoy -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card text-white bg-warning h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Citas de Hoy</h5>
+                            <h2 class="fw-bold" th:text="${citasHoy}">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <!-- Citas pendientes -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card text-white bg-danger h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Citas Pendientes</h5>
+                            <h2 class="fw-bold" th:text="${citasPendientes}">0</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Próximas citas -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Próximas Citas</h5>
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Paciente</th>
+                            <th>Médico</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Estado</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="cita : ${proximasCitas}">
+                            <td th:text="${cita.pacienteNombre}">Juan Pérez</td>
+                            <td th:text="${cita.medicoNombre}">Dr. García</td>
+                            <td th:text="${cita.fecha}">2025-09-30</td>
+                            <td th:text="${cita.hora}">10:00 AM</td>
+                            <td>
+                                <span class="badge bg-success" th:if="${cita.estado == 'Activo'}">Activo</span>
+                                <span class="badge bg-danger" th:if="${cita.estado == 'Cancelado'}">Cancelado</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Gráfico -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Citas por Mes</h5>
+                    <canvas id="citasChart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Sidebar responsivo
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    document.getElementById('open-sidebar').onclick = () => {
+        sidebar.classList.add('active'); sidebarOverlay.classList.add('active');
+    };
+    document.getElementById('close-sidebar').onclick = () => {
+        sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active');
+    };
+    sidebarOverlay.onclick = () => {
+        sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active');
+    };
+
+    // Gráfico citas por mes (ejemplo estático)
+    const ctx = document.getElementById('citasChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Enero','Febrero','Marzo','Abril','Mayo','Junio'],
+            datasets: [{
+                label: 'Citas',
+                data: [30, 45, 60, 40, 55, 70],
+                backgroundColor: 'rgba(54, 162, 235, 0.7)'
+            }]
+        }
+    });
+</script>
+</body>
+</html>
